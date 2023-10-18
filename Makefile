@@ -2,7 +2,7 @@
 
 tmp_file_prefix=tmp
 SRC=halo.cu
-#PATH=/usr/local/cuda-12.1/bin/../nvvm/bin:$PATH
+CUDA_PATH=/usr/local/cuda/
 
 .PHONY: clean all
 
@@ -18,13 +18,14 @@ ${tmp_file_prefix}-6_halo.cpp4.ii: ${SRC}
 	-D__CUDA_ARCH_LIST__=860 \
 	-D__CUDACC__ \
 	-D__NVCC__  \
-	"-I/usr/local/cuda-12.1/bin/../targets/x86_64-linux/include"    \
+	"-I${CUDA_PATH}/bin/../targets/x86_64-linux/include"    \
 	-D__CUDACC_VER_MAJOR__=12 \
 	-D__CUDACC_VER_MINOR__=1 \
 	-D__CUDACC_VER_BUILD__=66 \
 	-D__CUDA_API_VER_MAJOR__=12 \
 	-D__CUDA_API_VER_MINOR__=1 \
 	-D__NVCC_DIAG_PRAGMA_SUPPORT__=1 \
+	-I/usr/local/cuda/targets/x86_64-linux/include \
 	-include "cuda_runtime.h" \
 	-m64 \
 	-E \
@@ -39,13 +40,14 @@ ${tmp_file_prefix}-10_halo.cpp1.ii: ${SRC}
 	-DCUDA_DOUBLE_MATH_FUNCTIONS \
 	-D__CUDACC__ \
 	-D__NVCC__  \
-	-I/usr/local/cuda-12.1/bin/../targets/x86_64-linux/include    \
+	-I${CUDA_PATH}/bin/../targets/x86_64-linux/include    \
 	-D__CUDACC_VER_MAJOR__=12 \
 	-D__CUDACC_VER_MINOR__=1 \
 	-D__CUDACC_VER_BUILD__=66 \
 	-D__CUDA_API_VER_MAJOR__=12 \
 	-D__CUDA_API_VER_MINOR__=1 \
 	-D__NVCC_DIAG_PRAGMA_SUPPORT__=1 \
+	-I/usr/local/cuda/targets/x86_64-linux/include \
 	-include cuda_runtime.h \
 	-m64 \
 	-E \
@@ -54,7 +56,7 @@ ${tmp_file_prefix}-10_halo.cpp1.ii: ${SRC}
 	-o ${tmp_file_prefix}-10_halo.cpp1.ii
 
 ${tmp_file_prefix}-5_halo.module_id ${tmp_file_prefix}-7_halo.cudafe1.cpp: ${tmp_file_prefix}-6_halo.cpp4.ii
-	cudafe++ \
+	${CUDA_PATH}/bin/cudafe++ \
 	--c++17 \
 	--gnu_version=110300 \
 	--display_error_number \
@@ -71,7 +73,7 @@ ${tmp_file_prefix}-5_halo.module_id ${tmp_file_prefix}-7_halo.cudafe1.cpp: ${tmp
 #	--orig_src_path_name "/home/liuweinan/20230303_TVM/cuda_demo/halo.cu" \
 
 ${tmp_file_prefix}-7_halo.ptx ${tmp_file_prefix}-7_halo.cudafe1.stub.c: ${tmp_file_prefix}-10_halo.cpp1.ii ${tmp_file_prefix}-5_halo.module_id
-	/usr/local/cuda-12.1/bin/../nvvm/bin/cicc \
+	${CUDA_PATH}/nvvm/bin/cicc \
 	--c++17 \
 	--gnu_version=110300 \
 	--display_error_number \
@@ -93,10 +95,10 @@ ${tmp_file_prefix}-7_halo.ptx ${tmp_file_prefix}-7_halo.cudafe1.stub.c: ${tmp_fi
 #    	--orig_src_path_name "/home/liuweinan/20230303_TVM/cuda_demo/halo.cu" \
 
 ${tmp_file_prefix}-11_halo.cubin: ${tmp_file_prefix}-7_halo.ptx
-	ptxas -arch=sm_86 -m64  "./${tmp_file_prefix}-7_halo.ptx"  -o "./${tmp_file_prefix}-11_halo.cubin"
+	${CUDA_PATH}/bin/ptxas -arch=sm_86 -m64  "./${tmp_file_prefix}-7_halo.ptx"  -o "./${tmp_file_prefix}-11_halo.cubin"
 
 ${tmp_file_prefix}-4_halo.fatbin.c: ${tmp_file_prefix}-11_halo.cubin
-	fatbinary -64 --cicc-cmdline="-ftz=0 -prec_div=1 -prec_sqrt=1 -fmad=1 " "--image3=kind=elf,sm=86,file=./${tmp_file_prefix}-11_halo.cubin" --embedded-fatbin="./${tmp_file_prefix}-4_halo.fatbin.c"
+	${CUDA_PATH}/bin/fatbinary -64 --cicc-cmdline="-ftz=0 -prec_div=1 -prec_sqrt=1 -fmad=1 " "--image3=kind=elf,sm=86,file=./${tmp_file_prefix}-11_halo.cubin" --embedded-fatbin="./${tmp_file_prefix}-4_halo.fatbin.c"
 
 
 ${tmp_file_prefix}-12_halo.o: ${tmp_file_prefix}-7_halo.cudafe1.stub.c ${tmp_file_prefix}-7_halo.cudafe1.cpp ${tmp_file_prefix}-4_halo.fatbin.c
@@ -104,7 +106,7 @@ ${tmp_file_prefix}-12_halo.o: ${tmp_file_prefix}-7_halo.cudafe1.stub.c ${tmp_fil
 	-D__CUDA_ARCH__=860 \
 	-D__CUDA_ARCH_LIST__=860 \
 	-DCUDA_DOUBLE_MATH_FUNCTIONS \
-	"-I/usr/local/cuda-12.1/bin/../targets/x86_64-linux/include"   \
+	"-I${CUDA_PATH}/bin/../targets/x86_64-linux/include"   \
 	-m64 \
 	-x c++  \
 	-c \
@@ -113,11 +115,11 @@ ${tmp_file_prefix}-12_halo.o: ${tmp_file_prefix}-7_halo.cudafe1.stub.c ${tmp_fil
 
 
 ${tmp_file_prefix}-13_a_dlink.cubin ${tmp_file_prefix}-8_a_dlink.reg.c: ${tmp_file_prefix}-12_halo.o
-	nvlink -m64 --arch=sm_86 --register-link-binaries="./${tmp_file_prefix}-8_a_dlink.reg.c"    "-L/usr/local/cuda-12.1/bin/../targets/x86_64-linux/lib/stubs" "-L/usr/local/cuda-12.1/bin/../targets/x86_64-linux/lib" -cpu-arch=X86_64 "./${tmp_file_prefix}-12_halo.o"  -lcudadevrt  -o "./${tmp_file_prefix}-13_a_dlink.cubin" --host-ccbin "gcc"
+	${CUDA_PATH}/bin/nvlink -m64 --arch=sm_86 --register-link-binaries="./${tmp_file_prefix}-8_a_dlink.reg.c"    "-L${CUDA_PATH}/bin/../targets/x86_64-linux/lib/stubs" "-L${CUDA_PATH}/bin/../targets/x86_64-linux/lib" -cpu-arch=X86_64 "./${tmp_file_prefix}-12_halo.o"  -lcudadevrt  -o "./${tmp_file_prefix}-13_a_dlink.cubin" --host-ccbin "gcc"
 
 
 ${tmp_file_prefix}-9_a_dlink.fatbin.c: ${tmp_file_prefix}-13_a_dlink.cubin
-	fatbinary -64 --cicc-cmdline="-ftz=0 -prec_div=1 -prec_sqrt=1 -fmad=1 " -link "--image3=kind=elf,sm=86,file=./${tmp_file_prefix}-13_a_dlink.cubin" --embedded-fatbin="./${tmp_file_prefix}-9_a_dlink.fatbin.c"
+	${CUDA_PATH}/bin/fatbinary -64 --cicc-cmdline="-ftz=0 -prec_div=1 -prec_sqrt=1 -fmad=1 " -link "--image3=kind=elf,sm=86,file=./${tmp_file_prefix}-13_a_dlink.cubin" --embedded-fatbin="./${tmp_file_prefix}-9_a_dlink.fatbin.c"
 
 
 ${tmp_file_prefix}-14_a_dlink.o: ${tmp_file_prefix}-8_a_dlink.reg.c ${tmp_file_prefix}-9_a_dlink.fatbin.c
@@ -129,7 +131,7 @@ ${tmp_file_prefix}-14_a_dlink.o: ${tmp_file_prefix}-8_a_dlink.reg.c ${tmp_file_p
 	-D__NV_EXTRA_INITIALIZATION= \
 	-D__NV_EXTRA_FINALIZATION= \
 	-D__CUDA_INCLUDE_COMPILER_INTERNAL_HEADERS__  \
-	"-I/usr/local/cuda-12.1/bin/../targets/x86_64-linux/include"    \
+	"-I${CUDA_PATH}/bin/../targets/x86_64-linux/include"    \
 	-D__CUDACC_VER_MAJOR__=12 \
 	-D__CUDACC_VER_MINOR__=1 \
 	-D__CUDACC_VER_BUILD__=66 \
@@ -139,7 +141,7 @@ ${tmp_file_prefix}-14_a_dlink.o: ${tmp_file_prefix}-8_a_dlink.reg.c ${tmp_file_p
 	-m64 \
 	-x c++ \
 	-c \
-	"/usr/local/cuda-12.1/bin/crt/link.stub" \
+	"${CUDA_PATH}/bin/crt/link.stub" \
 	-o "./${tmp_file_prefix}-14_a_dlink.o"
 
 
@@ -150,8 +152,8 @@ a.out: ${tmp_file_prefix}-14_a_dlink.o ${tmp_file_prefix}-12_halo.o
 	-m64 \
 	-Wl,--start-group "./${tmp_file_prefix}-14_a_dlink.o" \
 	"./${tmp_file_prefix}-12_halo.o"   \
-	"-L/usr/local/cuda-12.1/bin/../targets/x86_64-linux/lib/stubs" \
-	"-L/usr/local/cuda-12.1/bin/../targets/x86_64-linux/lib"  \
+	"-L${CUDA_PATH}/bin/../targets/x86_64-linux/lib/stubs" \
+	"-L${CUDA_PATH}/bin/../targets/x86_64-linux/lib"  \
 	-lcudadevrt  \
 	-lcudart_static  \
 	-lrt \
