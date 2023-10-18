@@ -25,7 +25,6 @@ ${tmp_file_prefix}-6_halo.cpp4.ii: ${SRC}
 	-D__CUDA_API_VER_MAJOR__=12 \
 	-D__CUDA_API_VER_MINOR__=1 \
 	-D__NVCC_DIAG_PRAGMA_SUPPORT__=1 \
-	-I/usr/local/cuda/targets/x86_64-linux/include \
 	-include "cuda_runtime.h" \
 	-m64 \
 	-E \
@@ -47,7 +46,6 @@ ${tmp_file_prefix}-10_halo.cpp1.ii: ${SRC}
 	-D__CUDA_API_VER_MAJOR__=12 \
 	-D__CUDA_API_VER_MINOR__=1 \
 	-D__NVCC_DIAG_PRAGMA_SUPPORT__=1 \
-	-I/usr/local/cuda/targets/x86_64-linux/include \
 	-include cuda_runtime.h \
 	-m64 \
 	-E \
